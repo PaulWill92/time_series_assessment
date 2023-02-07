@@ -10,7 +10,7 @@ consumption = pd.read_csv("./Data analyst coding challenge/Consumption.csv")
 time.sleep(1)
 print(consumption)
 # this throws an error because date formats in the rows are different
-print("Converting date column into datetype object")
+print("Attempting to convert date column into datetype object")
 try:
     consumption["Date"]= pd.to_datetime(consumption["Date"], infer_datetime_format=True)
 except:
@@ -28,7 +28,7 @@ consumption.duplicated().sum() # there are zero across duplicates
 # date duplicates:
 consumption["Date"].duplicated().sum() 
 
-consumption["Date"].duplicated().sum() # 18 duplicated 
+
 # check why the duplicates occur with consumption value
 consumption.loc[consumption["Date"].duplicated()]
 consumption.loc[consumption["Date"]=="2020125"] # The values within the day 1 to 29 are quite low in differences how to handle the duplicates
@@ -116,6 +116,7 @@ cleaned_consumption_df["Season"]= [season_mapping(month) for month in cleaned_co
 # aggregate by year and season
 season = cleaned_consumption_df.groupby(["Year","Season"]).agg(Consumption=("Consumption", "mean")).reset_index()
 season_filtered = season.loc[season["Year"].astype("int") <= 2020].copy()
+average_2021_2022 = season.loc[season["Year"].astype("int") > 2020].copy().groupby("Year").mean().reset_index().replace({"2021": "2021 Average", "2022":"2022 Average"})
 
 line = alt.Chart(season_filtered).mark_line(point=True).encode(
     alt.X("Year:T"),
@@ -128,11 +129,25 @@ line = alt.Chart(season_filtered).mark_line(point=True).encode(
              ]
 ).interactive().properties()
 
+avg_line = alt.Chart(average_2021_2022).mark_rule(color="black", strokeDash=[2,2]).encode(
+    alt.Y("Consumption:Q"),
+    alt.SizeValue(2),
+    alt.Color("Year"),
+
+
+)
+
+line + avg_line
+
+graph = line+avg_line
+
+
+
 # Energy consumption seems to go up based on how cold the season is. The Years 2017 and 2018 most likely had the coldest winters as their consumption units peaked.
 
 # simple app:
 app = dp.App( dp.Text("## Energy Consumption Analysis Across 5 Years"),
-              dp.Plot(line, caption="Units of Energy Consumption Per Year"),
+              dp.Plot(graph, caption="Units of Energy Consumption Per Year"),
               dp.DataTable(cleaned_consumption_df, caption="Consumption Dataset"),
               dp.Text("### Analysis: \nEnergy consumption seems to go up based on how cold the season is that means winter and autumn, are generally the colder of the seasons, thus more energy is consumed than the other seasons. The Years 2017 and 2018 most likely had the coldest winters as their consumption units peaked."))
 app.save(path="./consumption.html", open=True)
