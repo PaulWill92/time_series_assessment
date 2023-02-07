@@ -5,3 +5,6 @@ Data analyst coding challenge/Trades.csv
 notes.py
 Data analyst coding challenge/InterviewQuestions (3).pdf
 *.pyc
+archive/.DS_Store
+archive/consumption.py
+archive/trades.py
